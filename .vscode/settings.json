@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "reader.h": "c",
+    "string.h": "c",
+    "operations.h": "c"
+  }
+}

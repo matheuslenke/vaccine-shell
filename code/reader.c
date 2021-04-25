@@ -1,20 +1,29 @@
-#include <string.h>
-#include <stdio.h>
-#include <limits.h>
-#include <stdlib.h>
+#include "../lib/reader.h"
 
-char* read_line(FILE *arq) {
-    size_t n = 0, r;
-    char *buf = NULL;
-
-    r = getline(&buf, &n, arq);
-    if(r < 0)
-        return(NULL);
-
-    if(buf && r >= UINT_MAX) {
-        free(buf);
-        return(NULL);
+int strcount(char *str, char c) {
+    int r = 0;
+    for(int i = 0; str[i]; i++){
+        r += str[i] == c; 
     }
-    
-    return(buf);
+    return r;
+}
+
+
+char *ltrim(char *s)
+{
+    while(isspace(*s)) s++;
+    return s;
+}
+
+char *rtrim(char *s)
+{
+    char* back = s + strlen(s);
+    while(isspace(*--back));
+    *(back+1) = '\0';
+    return s;
+}
+
+char *trim(char *s)
+{
+    return rtrim(ltrim(s)); 
 }

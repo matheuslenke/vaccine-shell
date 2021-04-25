@@ -1,0 +1,1 @@
+/usr/bin/cc -g   CMakeFiles/vaccine_shell.dir/code/operations.c.o CMakeFiles/vaccine_shell.dir/code/reader.c.o CMakeFiles/vaccine_shell.dir/code/list.c.o CMakeFiles/vaccine_shell.dir/main.c.o  -o vaccine_shell 
