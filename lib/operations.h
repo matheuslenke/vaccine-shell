@@ -13,12 +13,12 @@
 /*
 * Roda comandos com até 3 argumentos
 */
-void run_single_command(char** commands, int QtdComandos);
+void run_single_command(char** commands);
 
 /*
 * Função que realiza um fork e roda um comando simples sem pipes
 */
-void run_command(char** commands, int QtdComandos);
+void run_command(char** commands);
 
 /*
 * Função que realiza um fork para cada comando e roda o mesmo

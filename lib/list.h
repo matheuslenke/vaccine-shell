@@ -15,4 +15,6 @@ void lista_Libera (TLista* lista);
 
 void lista_mata_processos_pgid(TLista* lista);
 
+void lista_mata_processos_zombies(TLista* lista);
+
 #endif /* LISTA_H_ */

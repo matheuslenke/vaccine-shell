@@ -40,49 +40,35 @@ TLista* lista_InserePGID (TLista* lista , int pgid) {
 }
 
 void lista_Retira (TLista* lista, int pgid) {
-   TCelula *anterior;
-    int auxiliar;
-    anterior = NULL;
+    TCelula* p = lista->inicio;
+    TCelula* ant = NULL;
 
-    for (TCelula *p = lista->inicio; p != NULL; p = p->prox)
+    //Faz busca
+    while (p!=NULL && p->pgid != pgid)
     {
-        // printf("Mat: %d\n", mat);
-        // printf("Matricula aluno: %d", p->aluno->matricula);
-        if (p->pgid == pgid && p != NULL)
-        {
-            if(anterior != NULL) {
-                anterior->prox = p->prox;
-            }
-            if (p == lista->fim && anterior != NULL)
-            {
-                lista->fim = anterior;
-                auxiliar = p->pgid;
-            }
-            if (p == lista->fim && anterior == NULL)
-            {   
-                lista->inicio = NULL;
-                lista->fim = NULL;
-                auxiliar = p->pgid;
-            }
-            if (anterior = NULL)
-            {
-                lista->inicio = p->prox;
-            }
-            auxiliar = p->pgid;
-            free(p);
-
-            return auxiliar;
-        }
-        else if (p == lista->fim) {
-            auxiliar = NULL;
-            return auxiliar;
-        }
-        anterior = p;
+        ant = p;
+        p = p->prox;
     }
+    
+    // lista vazia ou não encontrou o pgid
+    if (p==NULL)
+        return NULL;
+    
+    //se for único
+    if (p == lista->inicio && p == lista->fim)
+        lista->inicio = lista->fim = NULL;
+    else if(p == lista->inicio)
+        lista->inicio = p->prox;
+    else if (p == lista->fim) {
+        lista->fim = ant;
+        lista->fim->prox = NULL;
+    } else
+        ant->prox = p->prox;
+    
+    free(p);
 }
 
 void lista_Imprime (TLista* lista) {
-  printf("Lista foi impressa\n");
     for (TCelula *p = lista->inicio; p != NULL; p = p->prox) {
         printf("PGID: %d \n", p->pgid);
     }
@@ -90,14 +76,29 @@ void lista_Imprime (TLista* lista) {
 
 void lista_mata_processos_pgid(TLista* lista) {
     for (TCelula *p = lista->inicio; p != NULL; p = p->prox) {
-        kill(-p->pgid, SIGTERM);
-        lista_Retira(lista, p->pgid);
+        killpg(p->pgid, SIGTERM);
+    }
+    lista_Libera(lista);
+    raise(SIGTERM);
+}
+
+void lista_mata_processos_zombies(TLista* lista) {
+    for (TCelula *p = lista->inicio; p != NULL; p = p->prox) {
+        kill(getppid(), SIGCHLD);
+        waitpid(p->pgid, WNOWAIT);
     }
 }
 
 void lista_Libera (TLista* lista) {
-   for (TCelula *p = lista->inicio; p != NULL; p = p->prox) {
-        free(p->prox);
+    TCelula* p = lista -> inicio;
+    TCelula* t;
+
+    while (p != NULL)
+    {
+        t = p->prox;
         free(p);
+        p = t;
     }
+
+    free(lista);
 }
