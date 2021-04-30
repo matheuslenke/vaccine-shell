@@ -1,14 +1,37 @@
-#include "../lib/operations.h"
+#include "../lib/vaccine_shell.h"
 #include "../lib/list.h"
+#include "../lib/masks.h"
 
 #define READ 0
 #define WRITE 1
 
-void run_single_command(char** commands){
-    execvp(commands[0], commands);
+struct shell {
+    TLista* lista_de_pgids;
+};
+
+vsh_t* inicializa_shell() {
+    vsh_t *vsh = (vsh_t*) malloc(sizeof(vsh_t));
+    vsh->lista_de_pgids = lista_InicializaLista();
+    return vsh;
 }
 
-void run_command(char** commands) {
+void roda_comando_unico(char** comandos){
+    // Verifica se o comando existe
+    char* verificaComando = (char*)malloc(100 * sizeof(char));
+    strcat(verificaComando, "which ");
+    strcat(verificaComando, comandos[0]);
+    strcat(verificaComando, " > /dev/null 2>&1");
+    if (system(verificaComando)) {
+        // Verifica se o comando é válido
+        printf("Este comando [%s] não existe\n", comandos[0]);
+        free(verificaComando);
+    } else {
+        free(verificaComando);
+        execvp(comandos[0], comandos);
+    }
+}
+
+void roda_comando(char** comandos) {
     pid_t p1;
     int wstatus;
 
@@ -16,39 +39,26 @@ void run_command(char** commands) {
     if (p1 == -1) {
         printf("Erro ao realizar fork\n");
     } else if(p1 == 0) {     // Processo filho
-        create_mask_foreground_process();
-
-        run_single_command(commands);
+        cria_mascara_processo_foreground();
+        roda_comando_unico(comandos);
     } else if (p1 > 0) {     // Processo pai
-        waitpid(p1, &wstatus, 0);
+        cria_mascara_ignora_sinais_teclado();
+        cria_mascara_trata_sitstp();
+        waitpid(p1, &wstatus, WUNTRACED);
+
+        restaura_mascara_padrao();
     } 
 }
 
-void create_mask_background_process() {
-    struct sigaction sa = { 0 };
-    sa.sa_flags = SA_RESTART;
-    sa.sa_handler = SIG_BLOCK;
-    sigaction(SIGINT, &sa, NULL); 
-    sigaction(SIGQUIT, &sa, NULL);
-    sigaction(SIGTSTP, &sa, NULL);
-    sigaction(SIGTERM, &sa, NULL);
-}
 
-void create_mask_foreground_process() {
-    struct sigaction sa = { 0 };
-    sa.sa_flags = SA_RESTART;
-    sa.sa_handler = SIG_IGN;
-    sigaction(SIGUSR1, &sa, NULL);
-    sigaction(SIGUSR2, &sa, NULL);
-}
 
-void run_command_special(char* commandLine, int QtdPipes, TLista* lista_de_pgids) {
-    char* commandLines[QtdPipes+1];
-    char *tok = strtok(commandLine, "|");
+void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_pgids) {
+    char* linhasDeComando[QtdPipes+1];
+    char *tok = strtok(linhaDeComando, "|");
     pid_t session_id, pid_parent;
     for(int i = 0; i < QtdPipes +1; i++, tok = strtok(NULL, "|")){
         //O trim retira os espaços da string no começo e fim
-        commandLines[i] = trim(strdup(tok));
+        linhasDeComando[i] = trim(strdup(tok));
     }
     // Cria todos os pids dos filhos e para o pai aguardar
     pid_t pids[QtdPipes + 1], wpid;
@@ -68,7 +78,7 @@ void run_command_special(char* commandLine, int QtdPipes, TLista* lista_de_pgids
     } 
     else if (pid_parent == 0) { // Child process
         //Bloqueio dos sinais de entrada do teclado
-        create_mask_background_process();
+        cria_mascara_processo_background();
         // Inicializa todos os pipes
         for(int i = 0; i < QtdPipes; i++) {
             if (pipe(pipes[i]) < 0) {
@@ -85,25 +95,31 @@ void run_command_special(char* commandLine, int QtdPipes, TLista* lista_de_pgids
         close(pipe_pgid[WRITE]);
 
         for(int i = 0; i< QtdPipes + 1; i++) {
-            int QtdComandos = strcount(commandLines[i], ' ') + 1;
-            char* commands[QtdComandos + 1];
+            int QtdComandos = strcount(linhasDeComando[i], ' ') + 1;
+            char* comandos[QtdComandos + 1];
 
             // Divide a string em cada espaço
-            char *tok = strtok(commandLines[i], " ");
+            char *tok = strtok(linhasDeComando[i], " ");
             for(int j = 0; j < QtdComandos; j++, tok = strtok(NULL, " ")){
-                commands[j] = strdup(tok);
+                comandos[j] = strdup(tok);
             }
-            commands[QtdComandos] = NULL;
+            comandos[QtdComandos] = NULL;
 
             if(QtdComandos > 4){
                 printf("Comando não pode ser executado. Limite de argumentos excedido.\n");
                 return;
             }
 
+            // Verifica se é liberamoita ou armageddon
+            if(strcmp(comandos[0], "armageddon") == 0 || strcmp(comandos[0], "liberamoita") == 0) {
+                printf("Você não pode rodar o comando %s em background.\n", comandos[0]);
+                return;
+            }
+
             // Criando pipes e processos e rodando
             pids[i] = fork();
             if(pids[i] == -1) {
-                printf("Erro ao criar filho");
+                printf("Erro ao criar filho.\n");
             } else if (pids[i] == 0) { // Filho
                 if(i == 0) {
                     // Primeiro processo
@@ -148,7 +164,7 @@ void run_command_special(char* commandLine, int QtdPipes, TLista* lista_de_pgids
                         }
                     }
                 }
-                run_single_command(commands);
+                roda_comando_unico(comandos);
             }
         }
         //Fechando pipes processo pai
@@ -157,18 +173,18 @@ void run_command_special(char* commandLine, int QtdPipes, TLista* lista_de_pgids
             close(pipes[i][WRITE]);
         }
 
-        sleep(500); //para criar zoombies
+        // sleep(500); //para criar zoombies
         
         // Deixa o pai esperando os três filhos, para depois dar exit
         while ((wpid = wait(&status)) > 0) {
-            print_prompt();
+            imprime_prompt();
             // Se algum filho morreu por SIGUSR1 ou SIGUSR2, mata todos do grupo
             if(WTERMSIG(status) == SIGUSR1 || WTERMSIG(status) == SIGUSR2) {
                 if (WTERMSIG(status) == SIGUSR1)
                     printf("Processo recebeu sinal SIGUSR1. Infelizmente todos do grupo %d morreram.\n", sid);
                 else 
                     printf("Processo recebeu sinal SIGUSR2. Infelizmente todos do grupo %d morreram.\n", sid);
-                print_prompt();
+                imprime_prompt();
 
                 // Retira o pgid da lista e envia o sinal para matar todos os processos do mesmo grupo
                 lista_Retira(lista_de_pgids, sid);
@@ -177,13 +193,12 @@ void run_command_special(char* commandLine, int QtdPipes, TLista* lista_de_pgids
         }
 
         // for(int i = 0; i < QtdComandos; i++){
-        //     free(commands[i]);
+        //     free(comandos[i]);
         // }
     
-        printf("\n");
-        printf("[Background] processos com sid %d terminaram.\n", sid);
+        printf("\n[Background] processos com sid %d terminaram.\n", sid);
         lista_Retira(lista_de_pgids, sid);
-        print_prompt();
+        imprime_prompt();
 
         exit(0);
     }
@@ -195,71 +210,70 @@ void run_command_special(char* commandLine, int QtdPipes, TLista* lista_de_pgids
     printf("\n");
 }
 
-void run_armageddon(TLista *lista_de_pgids) {
+void roda_armageddon(TLista* lista_de_pgids) {
     lista_mata_processos_pgid(lista_de_pgids);
 }
 
-void run_liberamoita(TLista *lista_de_pgids) {
-    lista_mata_processos_zombies(lista_de_pgids);
+void roda_liberamoita(vsh_t* vsh) {
+    while(waitpid(-1, NULL, WNOHANG) > 0);
+    printf("Liberou todos os zombies.\n");
 }
 
-void print_prompt() {
+void imprime_prompt() {
     printf("\rvsh 🐊 > ");
     // Limpa o buffer para exibir corretamente no terminal
     fflush(stdout);
 }
 
-void read_command(TLista* lista_de_pgids) {
+void le_comando(vsh_t* vsh) {
     // Linha de comando lida, de tamanho máximo 300 caracteres
-    char* commandLine = (char*) malloc(400 * sizeof(char));
-    print_prompt();
-    // commandLine = getline(&commandLine, 300, stdin);
-    scanf("%[^\n]", commandLine);
+    char* linhaDeComando = (char*) malloc(400 * sizeof(char));
+    imprime_prompt();
+    // linhaDeComando = getline(&linhaDeComando, 300, stdin);
+    scanf("%[^\n]", linhaDeComando);
     getchar();
-    printf("%s\n", commandLine);
 
     // Verificando se é operacao interna
-    char* operacaoInterna = strdup(commandLine);
+    char* operacaoInterna = strdup(linhaDeComando);
     trim(operacaoInterna);
     // Verificando se é armageddon
     if(strcmp(operacaoInterna, "armageddon") == 0) {
-        run_armageddon(lista_de_pgids);
+        roda_armageddon(vsh->lista_de_pgids);
     // Verificando se é liberamoita
     } else if(strcmp(operacaoInterna, "liberamoita") == 0) {
-        run_liberamoita(lista_de_pgids);
+        roda_liberamoita(vsh);
     } else {
         // Conta quantos pipes existem, usando o "|" como contador
-        int QtdPipes = strcount(commandLine, '|');
-
-        // Background
+        int QtdPipes = strcount(linhaDeComando, '|');
+        
+        // Background  
         if (QtdPipes > 0) {
-            run_command_special(commandLine, QtdPipes, lista_de_pgids);
+            roda_comando_especial(linhaDeComando, QtdPipes, vsh->lista_de_pgids);
         }
         // Foreground 
         else {
-            int QtdComandos = strcount(commandLine, ' ') + 1;
-            char* commands[QtdComandos];
+            int QtdComandos = strcount(linhaDeComando, ' ') + 1;
+            char* comandos[QtdComandos];
 
-            char *tok = strtok(commandLine, " ");
+            char *tok = strtok(linhaDeComando, " ");
 
             for(int i = 0; i < QtdComandos; i++, tok = strtok(NULL, " ")){
-                commands[i] = strdup(tok);
+                comandos[i] = strdup(tok);
             }
-            printf("Quantidade comandos: %d\n", QtdComandos);
 
             if(QtdComandos > 4){
                 printf("Comando não pode ser executado. Limite de argumentos excedido.\n");
                 return;
             }
 
-            commands[QtdComandos] = NULL;
-            run_command(commands);
+            comandos[QtdComandos] = NULL;
+            roda_comando(comandos);
             // Libera toda a memoria alocada pros comandos
            
             for(int i = 0; i < QtdComandos; i++){
-                free(commands[i]);
+                free(comandos[i]);
             }
         }
     }
-    free(commandLine);
+    free(linhaDeComando);
 }

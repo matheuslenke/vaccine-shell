@@ -82,13 +82,6 @@ void lista_mata_processos_pgid(TLista* lista) {
     raise(SIGTERM);
 }
 
-void lista_mata_processos_zombies(TLista* lista) {
-    for (TCelula *p = lista->inicio; p != NULL; p = p->prox) {
-        kill(getppid(), SIGCHLD);
-        waitpid(p->pgid, WNOWAIT);
-    }
-}
-
 void lista_Libera (TLista* lista) {
     TCelula* p = lista -> inicio;
     TCelula* t;

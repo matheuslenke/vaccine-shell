@@ -9,8 +9,8 @@
 
 CC=gcc
 CFLAGS=-w
-DEPS = reader.h operations.h list.h
-OBJ = code/reader.o code/operations.o code/list.o main.o
+DEPS = reader.h vaccine_shell.h list.h masks.h
+OBJ = code/reader.o code/vaccine_shell.o code/list.o code/masks.o main.o
 
 all: vsh clean run
 
