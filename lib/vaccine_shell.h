@@ -10,42 +10,71 @@
 #include "reader.h"
 #include "list.h"
 
-
+//tipo opaco 
 typedef struct shell vsh_t;
-/*
-* Roda comandos com até 3 argumentos
-*/
+
+/* Roda um unico comando (Foreground)
+ * inputs: vetor de string comandos
+ * output: nenhum
+ * pre-condicao: comandos preenchidos
+ * pos-condicao: execução do comando
+ */
 void roda_comando_unico(char** comandos);
 
-/*
-* Função que realiza um fork e roda um comando simples sem pipes
-*/
+/* Chama as funções que tratam os sinais e chama pra rodar o comando
+ * inputs: vetor de string comandos
+ * output: nenhum
+ * pre-condicao: comandos preenchidos
+ * pos-condicao: execução do comando
+ */
 void roda_comando(char** comandos);
 
-/*
-* Função que realiza um fork para cada comando e roda o mesmo
-* com pipes
-*/
-void roda_comando_especial(char* commandLine, int QtdPipes, TLista* lista_de_pgids);
+/* Comandos que sao passados com pipe (Background)
+ * inputs: string com a linha de comando, inteiro quantidade de pipes e lista com o grupo de processos
+ * output: nenhum
+ * pre-condicao: lista devidamente inicializada
+ * pos-condicao: comando executado e lista inserida
+ */
+void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_pgids);
 
-/*
-* Função interna armageddon
-*/
+/* Mata todos os processos que estejam rodando, incluindo a shell
+ * inputs: lista com o grupo de processos
+ * output: nenhum
+ * pre-condicao: lista inicializada
+ * pos-condicao: terminar a execução de todos os processos
+ */
 void roda_armageddon(TLista* lista_de_pgids);
 
-/*
-* Função interna liberamoita
-*/
+/* Mata todos os processos zombies
+ * inputs: struct vsh
+ * output: nenhum
+ * pre-condicao: struct inicializada
+ * pos-condicao: todos os processos zombies terminados
+ */
 void roda_liberamoita(vsh_t* vsh);
 
-/*
-* Função para inicializar shell
-*/
+/* Inicializa a struct vsh
+ * inputs: nenhum
+ * output: struct inicializada
+ * pre-condicao: nenhuma
+ * pos-condicao: struct inicializada
+ */
 vsh_t* inicializa_shell();
 
-/*
-* Função para ler comandos
-*/
+/* Libera a memoria alocada pra strct vsh
+ * inputs: struct vsh
+ * output: nenhum
+ * pre-condicao: struct inicializada
+ * pos-condicao: struct desalocada
+ */
+void libera_shell(vsh_t* shell);
+
+/* Analisa a linha de comando inserida e chama a função especifica pra ele
+ * inputs: struct vsh
+ * output: nenhum
+ * pre-condicao: struct inicializada
+ * pos-condicao: comando executado
+ */
 void le_comando(vsh_t* vsh);
 
 #endif /* OPERATIONS_H */

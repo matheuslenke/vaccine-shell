@@ -7,24 +7,36 @@
 #include <sys/wait.h>
 #include <string.h>
 
-/*
-* Função STRCOUNT: Conta a quantidade de caracteres
-*/
+/* Conta a quantidade de caracteres em uma string
+ * inputs: ponteiro para string e caracter
+ * output: quantidade repetida
+ * pre-condicao: ponteiro para string e caracter criados
+ * pos-condicao: nenhum
+ */
 int strcount(char *str, char c);
 
-/*
-* Função auxiliar TRIM
-*/
+/* Retira espaços do início da string
+ * inputs: ponteiro para string
+ * output: string sem espaços no início
+ * pre-condicao: ponteiro para string criado
+ * pos-condicao: nenhum
+ */
 char *ltrim(char *s);
 
-/*
-* Função auxiliar TRIM
-*/
+/* Retira espaços do fim da string
+ * inputs: ponteiro para string
+ * output: string sem espaços no fim
+ * pre-condicao: ponteiro para string criado
+ * pos-condicao: nenhum
+ */
 char *rtrim(char *s);
 
-/*
-* Função TRIM: retira espaços vazios
-*/
+/* Retira espaços vazios
+ * inputs: ponteiro para string
+ * output: string sem espaços
+ * pre-condicao: ponteiro para string criado
+ * pos-condicao: nenhum
+ */
 char *trim(char *s);
 
 #endif /* READER_H */

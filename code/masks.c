@@ -10,7 +10,6 @@ void restaura_mascara_padrao() {
     sigaction(SIGTERM, &sa, NULL);
 }
 
-
 void cria_mascara_ignora_sinais_teclado() {
     struct sigaction sa = { 0 };
     sa.sa_flags = SA_RESTART;
@@ -25,7 +24,7 @@ void trata_sigtstp() {
     printf("\nProcesso suspenso!\n");
 }
 
-void cria_mascara_trata_sitstp() {
+void cria_mascara_trata_sigtstp() {
     struct sigaction sa = { 0 };
     sa.sa_flags = SA_RESTART;
     sa.sa_handler = trata_sigtstp;
@@ -59,7 +58,7 @@ void trata_sigurs_vsh() {
 
 void seta_mascara_vsh() {
     struct sigaction act;   
-    // Bloqueio de sinais SIGINT, SIGQUIT e SIGTSTP durante tratamento
+    // Bloqueio de sinais SIGINT, SIGQUIT, SIGTSTP e SIGTERM
     struct sigaction sa = { 0 };
     sigset_t block_sigs;
     sigemptyset(&block_sigs);  

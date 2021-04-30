@@ -2,8 +2,10 @@
 #include "../lib/list.h"
 #include "../lib/masks.h"
 
+// Usados para ler e escrever no pipe
 #define READ 0
 #define WRITE 1
+#define MAX_READING 400
 
 struct shell {
     TLista* lista_de_pgids;
@@ -13,6 +15,10 @@ vsh_t* inicializa_shell() {
     vsh_t *vsh = (vsh_t*) malloc(sizeof(vsh_t));
     vsh->lista_de_pgids = lista_InicializaLista();
     return vsh;
+}
+
+void libera_shell(vsh_t* shell){
+    free(shell);
 }
 
 void roda_comando_unico(char** comandos){
@@ -42,20 +48,23 @@ void roda_comando(char** comandos) {
         cria_mascara_processo_foreground();
         roda_comando_unico(comandos);
     } else if (p1 > 0) {     // Processo pai
+        /* Define as mascaras para a shell ignorar sinais do teclado
+        *  enquanto o processo roda em foreground */
         cria_mascara_ignora_sinais_teclado();
-        cria_mascara_trata_sitstp();
+        cria_mascara_trata_sigtstp();
         waitpid(p1, &wstatus, WUNTRACED);
 
+        // Retorna a receber sinais do teclado
         restaura_mascara_padrao();
     } 
 }
 
-
-
 void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_pgids) {
+    // Cria um vetor contendo cada comando em uma posição
     char* linhasDeComando[QtdPipes+1];
     char *tok = strtok(linhaDeComando, "|");
     pid_t session_id, pid_parent;
+
     for(int i = 0; i < QtdPipes +1; i++, tok = strtok(NULL, "|")){
         //O trim retira os espaços da string no começo e fim
         linhasDeComando[i] = trim(strdup(tok));
@@ -66,23 +75,23 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
     int pipes[QtdPipes][2];
     
     // Variáveis envolvendo criação da sessão
-    pid_t sid; 
-    int pipe_pgid[2];
+    pid_t sid;
+    int pipe_pgid[2]; // Pipe para envio do SID criado para registro na lista da shell
     if (pipe(pipe_pgid) < 0) { 
-        fprintf(stderr,"Erro no tubo\n");
+        fprintf(stderr,"Erro no tubo.\n");
         _exit(1);
     }
 
     if((pid_parent = fork()) == -1) {
-        printf("Failed to fork");
+        printf("Falha ao fazer o fork.\n");
     } 
-    else if (pid_parent == 0) { // Child process
+    else if (pid_parent == 0) { // Processo filho
         //Bloqueio dos sinais de entrada do teclado
         cria_mascara_processo_background();
         // Inicializa todos os pipes
         for(int i = 0; i < QtdPipes; i++) {
             if (pipe(pipes[i]) < 0) {
-                fprintf(stderr,"Erro no tubo\n");
+                fprintf(stderr,"Erro no tubo.\n");
                 _exit(1);
             }
         }
@@ -94,6 +103,8 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
         write(pipe_pgid[WRITE], &sid, sizeof(pid_t));
         close(pipe_pgid[WRITE]);
 
+        /* Para cada um dos comandos entre os pipes, lê os comandos e seus argumentos
+        *  e roda os programas relacionados */
         for(int i = 0; i< QtdPipes + 1; i++) {
             int QtdComandos = strcount(linhasDeComando[i], ' ') + 1;
             char* comandos[QtdComandos + 1];
@@ -110,7 +121,7 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
                 return;
             }
 
-            // Verifica se é liberamoita ou armageddon
+            // Verifica se é liberamoita ou armageddon e retorna caso seja
             if(strcmp(comandos[0], "armageddon") == 0 || strcmp(comandos[0], "liberamoita") == 0) {
                 printf("Você não pode rodar o comando %s em background.\n", comandos[0]);
                 return;
@@ -133,8 +144,7 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
                         close(pipes[z][WRITE]);
                     }
                 } 
-                else if(i == QtdPipes+1) {
-                    // Ultimo processo
+                else if(i == QtdPipes+1) { // Ultimo processo
                     close(pipes[i-1][WRITE]);
                     dup2(pipes[i-1][READ], READ);
                     close(pipes[i-1][READ]);
@@ -147,8 +157,7 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
                         }
                     }
                 } 
-                else {
-                    // Processos do meio
+                else { // Processos do meio
                     close(pipes[i-1][WRITE]);
                     close(pipes[i][READ]);
                     dup2(pipes[i-1][READ], READ);
@@ -172,8 +181,6 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
             close(pipes[i][READ]);
             close(pipes[i][WRITE]);
         }
-
-        // sleep(500); //para criar zoombies
         
         // Deixa o pai esperando os três filhos, para depois dar exit
         while ((wpid = wait(&status)) > 0) {
@@ -191,10 +198,6 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
                 killpg(sid, SIGTERM);
             }
         }
-
-        // for(int i = 0; i < QtdComandos; i++){
-        //     free(comandos[i]);
-        // }
     
         printf("\n[Background] processos com sid %d terminaram.\n", sid);
         lista_Retira(lista_de_pgids, sid);
@@ -226,16 +229,16 @@ void imprime_prompt() {
 }
 
 void le_comando(vsh_t* vsh) {
-    // Linha de comando lida, de tamanho máximo 300 caracteres
-    char* linhaDeComando = (char*) malloc(400 * sizeof(char));
+    // Linha de comando lida, de tamanho máximo MAX_READING
+    char* linhaDeComando = (char*) malloc(MAX_READING * sizeof(char));
     imprime_prompt();
-    // linhaDeComando = getline(&linhaDeComando, 300, stdin);
     scanf("%[^\n]", linhaDeComando);
-    getchar();
+    getchar(); // Pega o \n sobrando
 
     // Verificando se é operacao interna
     char* operacaoInterna = strdup(linhaDeComando);
-    trim(operacaoInterna);
+    trim(operacaoInterna); // Retira espaços sobrando da leitura
+
     // Verificando se é armageddon
     if(strcmp(operacaoInterna, "armageddon") == 0) {
         roda_armageddon(vsh->lista_de_pgids);
@@ -248,10 +251,15 @@ void le_comando(vsh_t* vsh) {
         
         // Background  
         if (QtdPipes > 0) {
+            printf("Lista de PGIDs antes de rodar os comandos:\n");
+            lista_Imprime(vsh->lista_de_pgids);
             roda_comando_especial(linhaDeComando, QtdPipes, vsh->lista_de_pgids);
+            printf("Lista de PGIDs após rodar os comandos:\n");
+            lista_Imprime(vsh->lista_de_pgids);
         }
         // Foreground 
         else {
+            // Conta a quantidade de espaços, e define quantos argumentos tem
             int QtdComandos = strcount(linhaDeComando, ' ') + 1;
             char* comandos[QtdComandos];
 
@@ -266,10 +274,10 @@ void le_comando(vsh_t* vsh) {
                 return;
             }
 
-            comandos[QtdComandos] = NULL;
+            comandos[QtdComandos] = NULL; //O ultimo deve ser NULL
             roda_comando(comandos);
+
             // Libera toda a memoria alocada pros comandos
-           
             for(int i = 0; i < QtdComandos; i++){
                 free(comandos[i]);
             }
