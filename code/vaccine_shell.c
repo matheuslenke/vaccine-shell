@@ -98,6 +98,7 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
 
         // Cria uma nova sessão no processo criado
         sid = setsid();
+        printf("Processo criado de sid %d e pid %d e pgid %d", sid, getpid(), getpgid(getpid()));
 
         close(pipe_pgid[READ]);
         write(pipe_pgid[WRITE], &sid, sizeof(pid_t));
@@ -181,6 +182,8 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
             close(pipes[i][READ]);
             close(pipes[i][WRITE]);
         }
+
+        lista_filtra_pgids_ativos(lista_de_pgids);
         
         // Deixa o pai esperando os três filhos, para depois dar exit
         while ((wpid = wait(&status)) > 0) {
@@ -193,14 +196,11 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
                     printf("Processo recebeu sinal SIGUSR2. Infelizmente todos do grupo %d morreram.\n", sid);
                 imprime_prompt();
 
-                // Retira o pgid da lista e envia o sinal para matar todos os processos do mesmo grupo
-                lista_Retira(lista_de_pgids, sid);
                 killpg(sid, SIGTERM);
             }
         }
     
         printf("\n[Background] processos com sid %d terminaram.\n", sid);
-        lista_Retira(lista_de_pgids, sid);
         imprime_prompt();
 
         exit(0);
@@ -246,6 +246,9 @@ void le_comando(vsh_t* vsh) {
     } else if(strcmp(operacaoInterna, "liberamoita") == 0) {
         roda_liberamoita(vsh);
     } else {
+        // Filtra os PGIDS dos processos que não existem mais
+        lista_filtra_pgids_ativos(vsh->lista_de_pgids); 
+
         // Conta quantos pipes existem, usando o "|" como contador
         int QtdPipes = strcount(linhaDeComando, '|');
         

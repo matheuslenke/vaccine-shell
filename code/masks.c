@@ -39,6 +39,7 @@ void cria_mascara_processo_background() {
     sigaction(SIGQUIT, &sa, NULL);
     sigaction(SIGTSTP, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
+
 }
 
 void cria_mascara_processo_foreground() {

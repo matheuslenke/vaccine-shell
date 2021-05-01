@@ -52,4 +52,6 @@ void lista_Libera (TLista* lista);
  */
 void lista_mata_processos_pgid(TLista* lista);
 
+void lista_filtra_pgids_ativos(TLista* lista);
+
 #endif /* LISTA_H_ */
