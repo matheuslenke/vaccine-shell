@@ -8,7 +8,6 @@ int strcount(char* str, char c) {
     return r;
 }
 
-
 char* ltrim(char* s)
 {
     while(isspace(*s)) s++;

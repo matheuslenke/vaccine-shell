@@ -1,3 +1,8 @@
+# Componentes do grupo:
+
+# Matheus Lenke Coutinho, Igor Wandermurem Dummer, Dayane Silva Erlacher Castro
+
+
 # A Flag -c diz para gerar o arquivo de objeto, o -o $@ diz para colocar a saída da compilação no arquivo nomeado no lado esquerdo do:, o $ <é o primeiro item na lista de dependências, e o A macro CFLAGS é definida como acima.
 # Como simplificação final, vamos usar as macros especiais $@ e $ ^, que são os lados esquerdo e direito de :, respectivamente, para tornar a regra geral de compilação mais geral. 
 # No exemplo abaixo, todos os arquivos de inclusão devem ser listados como parte da macro DEPS e todos os arquivos de objetos devem ser listados como parte da macro OBJ.
@@ -12,7 +17,7 @@ CFLAGS=-w
 DEPS = reader.h vaccine_shell.h list.h masks.h
 OBJ = code/reader.o code/vaccine_shell.o code/list.o code/masks.o main.o
 
-all: vsh clean run
+all: vsh clean
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)

@@ -52,6 +52,12 @@ void lista_Libera (TLista* lista);
  */
 void lista_mata_processos_pgid(TLista* lista);
 
+/* Percorre a lista de pgids e remove todos os pgids referente aos processos que não existem mais
+ * inputs: lista 
+ * output: nenhum
+ * pre-condicao: lista inicializada
+ * pos-condicao: lista atualizada
+ */
 void lista_filtra_pgids_ativos(TLista* lista);
 
 #endif /* LISTA_H_ */

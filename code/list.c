@@ -84,29 +84,18 @@ void lista_mata_processos_pgid(TLista* lista) {
 }
 
 void lista_filtra_pgids_ativos(TLista* lista) {
-    printf("\nEntra na função\n");
     TCelula *ant = NULL;
-    for (TCelula *p = lista->inicio; p != NULL; p = p->prox) {
-        printf("pid: %d, pgid: %d, pai: %d", getpid(), getpgid(getpid()), getppid());
-        int result = kill(p->pgid, 0);
-        printf("Resutlado do kill: %d, %d\n", result, errno);
-        char* verificaComando = (char*)malloc(100 * sizeof(char));
-        strcat(verificaComando, "kill -0 ");
-        strcat(verificaComando, p->pgid);
-        if (system(verificaComando)) {
-            // Verifica se o comando é válido
-            printf("Este processo não existe mais %d\n", errno);
-            // free(verificaComando);
-        } else {
-            printf("Esse processo existe!\n");
-            // free(verificaComando);
+    for (TCelula *p = lista->inicio; p != NULL;) {
+
+        if(getpgid(p->pgid) >= 0) {
+            p = p->prox;
         }
-        // if( result == 0) {
-        //     printf("Erro: %d", errno);
-        //     printf("\nretira 1\n");
-        //     ant = p;
-        //     // lista_Retira(lista, ant->pgid);
-        // }
+        else {
+            ant = p;
+            p = p->prox;
+            lista_Retira(lista, ant->pgid);
+        }
+
     }    
 }
 

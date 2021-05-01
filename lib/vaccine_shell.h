@@ -43,7 +43,7 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
  * pre-condicao: lista inicializada
  * pos-condicao: terminar a execução de todos os processos
  */
-void roda_armageddon(TLista* lista_de_pgids);
+void roda_armageddon(vsh_t* vsh);
 
 /* Mata todos os processos zombies
  * inputs: struct vsh

@@ -21,7 +21,7 @@ void cria_mascara_ignora_sinais_teclado() {
 }
 
 void trata_sigtstp() {
-    printf("\nProcesso suspenso!\n");
+    printf("\nProcesso suspenso.\n");
 }
 
 void cria_mascara_trata_sigtstp() {

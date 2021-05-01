@@ -213,8 +213,10 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
     printf("\n");
 }
 
-void roda_armageddon(TLista* lista_de_pgids) {
-    lista_mata_processos_pgid(lista_de_pgids);
+void roda_armageddon(vsh_t* vsh) {
+    // Elimina os zombies antes de terminar os outros processos
+    roda_liberamoita(vsh);
+    lista_mata_processos_pgid(vsh->lista_de_pgids);
 }
 
 void roda_liberamoita(vsh_t* vsh) {
@@ -241,7 +243,7 @@ void le_comando(vsh_t* vsh) {
 
     // Verificando se é armageddon
     if(strcmp(operacaoInterna, "armageddon") == 0) {
-        roda_armageddon(vsh->lista_de_pgids);
+        roda_armageddon(vsh);
     // Verificando se é liberamoita
     } else if(strcmp(operacaoInterna, "liberamoita") == 0) {
         roda_liberamoita(vsh);
@@ -254,11 +256,7 @@ void le_comando(vsh_t* vsh) {
         
         // Background  
         if (QtdPipes > 0) {
-            printf("Lista de PGIDs antes de rodar os comandos:\n");
-            lista_Imprime(vsh->lista_de_pgids);
             roda_comando_especial(linhaDeComando, QtdPipes, vsh->lista_de_pgids);
-            printf("Lista de PGIDs após rodar os comandos:\n");
-            lista_Imprime(vsh->lista_de_pgids);
         }
         // Foreground 
         else {
