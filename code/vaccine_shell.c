@@ -243,11 +243,14 @@ void le_comando(vsh_t* vsh) {
 
     // Verificando se é armageddon
     if(strcmp(operacaoInterna, "armageddon") == 0) {
+        free(operacaoInterna);
         roda_armageddon(vsh);
     // Verificando se é liberamoita
     } else if(strcmp(operacaoInterna, "liberamoita") == 0) {
+        free(operacaoInterna);
         roda_liberamoita(vsh);
     } else {
+        free(operacaoInterna);
         // Filtra os PGIDS dos processos que não existem mais
         lista_filtra_pgids_ativos(vsh->lista_de_pgids); 
 
