@@ -1,6 +1,14 @@
 #ifndef LISTA_H_
 #define LISTA_H_
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 //tipo opaco lista
 typedef struct lista TLista;
 

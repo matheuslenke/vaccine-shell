@@ -104,7 +104,7 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
 
         // Cria uma nova sessão no processo criado
         sid = setsid();
-        printf("Processo criado de sid %d e pid %d e pgid %d", sid, getpid(), getpgid(getpid()));
+        // printf("Processo criado de sid %d e pid %d e pgid %d", sid, getpid(), getpgid(getpid()));
 
         close(pipe_pgid[READ]);
         write(pipe_pgid[WRITE], &sid, sizeof(pid_t));

@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <ctype.h>
 
 /* Conta a quantidade de caracteres em uma string
  * inputs: ponteiro para string e caracter

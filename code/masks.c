@@ -27,7 +27,7 @@ void trata_sigtstp() {
 void cria_mascara_trata_sigtstp() {
     struct sigaction sa = { 0 };
     sa.sa_flags = SA_RESTART;
-    sa.sa_handler = trata_sigtstp;
+    sa.sa_handler = &trata_sigtstp;
     sigaction(SIGTSTP, &sa, NULL);
 }
 
@@ -55,6 +55,7 @@ void trata_sigurs_vsh() {
     printf("\rvsh 🐊 > \n");
     printf("              _  _\n    _ _      (0)(0)-._  _.-'^^'^^'^^'^^'^^'--.\n   (.(.)----'`        ^^'                /^   ^^-._\n    (    `                 \             |    _    ^^-._\n    VvvvvvvVv~~`__,/.._>  /:/:/:/:/:/:/:/\  (_..,______^^-.\n     `^^^^^^^^`/  /   /  /`^^^^^^^^^>^^>^`>  >        _`)  )\n              (((`   (((`          (((`  (((`        `'--'^\n");
     printf("I feel weird...\n");
+    imprime_prompt();
 }
 
 void seta_mascara_vsh() {

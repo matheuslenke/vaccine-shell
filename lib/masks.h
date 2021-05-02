@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <string.h>
+#include "../lib/vaccine_shell.h"
 
 /* Restaura a mascara padrão
  * inputs: nenhum
@@ -61,7 +62,7 @@ void cria_mascara_processo_foreground(void);
  * pre-condicao: nenhum
  * pos-condicao: nenhum
  */
-void trata_sigurs_vsh(void);
+void trata_sigurs_vsh();
 
 /* Bloqueia sinais e seta tratamento sinais SIGUSR1 e SIGUSR2
  * inputs: nenhum

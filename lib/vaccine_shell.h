@@ -77,4 +77,12 @@ void libera_shell(vsh_t* shell);
  */
 void le_comando(vsh_t* vsh);
 
+/* Imprime o prompt da shell
+ * inputs: nenhum
+ * output: String do prompt printada
+ * pre-condicao: nenhuma
+ * pos-condicao: comando executado
+ */
+void imprime_prompt();
+
 #endif /* OPERATIONS_H */
