@@ -225,7 +225,6 @@ void roda_armageddon(vsh_t* vsh) {
 
 void roda_liberamoita(vsh_t* vsh) {
     while(waitpid(-1, NULL, WNOHANG) > 0);
-    printf("Liberou todos os zombies.\n");
 }
 
 void le_comando(vsh_t* vsh) {
@@ -242,10 +241,12 @@ void le_comando(vsh_t* vsh) {
     // Verificando se é armageddon
     if(strcmp(operacaoInterna, "armageddon") == 0) {
         free(operacaoInterna);
+        printf("Terminando todos os processos da vsh.\n");
         roda_armageddon(vsh);
     // Verificando se é liberamoita
     } else if(strcmp(operacaoInterna, "liberamoita") == 0) {
         free(operacaoInterna);
+        printf("Liberou todos os zombies.\n");
         roda_liberamoita(vsh);
     } else {
         free(operacaoInterna);
