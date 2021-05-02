@@ -40,6 +40,12 @@ void cria_mascara_processo_background() {
     sigaction(SIGTSTP, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
+    // Tratramento sinais SIGUSR1 e SIGUSR2
+    sa.sa_flags = SA_RESTART;
+    sa.sa_handler = &trata_sigusr_background;
+    sigaction(SIGUSR1, &sa, NULL);
+    sigaction(SIGUSR2, &sa, NULL);
+
 }
 
 void cria_mascara_processo_foreground() {
@@ -56,6 +62,10 @@ void trata_sigurs_vsh() {
     printf("              _  _\n    _ _      (0)(0)-._  _.-'^^'^^'^^'^^'^^'--.\n   (.(.)----'`        ^^'                /^   ^^-._\n    (    `                 \             |    _    ^^-._\n    VvvvvvvVv~~`__,/.._>  /:/:/:/:/:/:/:/\  (_..,______^^-.\n     `^^^^^^^^`/  /   /  /`^^^^^^^^^>^^>^`>  >        _`)  )\n              (((`   (((`          (((`  (((`        `'--'^\n");
     printf("I feel weird...\n");
     imprime_prompt();
+}
+
+void trata_sigusr_background() {
+    killpg(getpid(), SIGTERM);
 }
 
 void seta_mascara_vsh() {

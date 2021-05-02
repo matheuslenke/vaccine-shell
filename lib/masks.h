@@ -40,7 +40,16 @@ void trata_sigtstp();
  */
 void cria_mascara_trata_sigtstp(void);
 
-/* Cria mascara que bloquea os sinais SIGINT, SIGQUIT, SIGTSTP, SIGTERM
+/* Tratamento sinais SIGUSR1 e SIGUSR2 para o filho da shell
+ * inputs: nenhum
+ * output: nenhum
+ * pre-condicao: nenhum
+ * pos-condicao: Todos os processos do mesmo grupo são mortos
+ */
+void trata_sigusr_background();
+
+/* Cria mascara que bloquea os sinais SIGINT, SIGQUIT, SIGTSTP,
+ * SIGTERM e tratadores para SIGUSR1 e SIGUSR2
  * inputs: nenhum
  * output: nenhum
  * pre-condicao: nenhum
