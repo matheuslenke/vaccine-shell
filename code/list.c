@@ -53,7 +53,7 @@ void lista_Retira (TLista* lista, int pgid) {
     
     // lista vazia ou não encontrou o pgid
     if (p==NULL)
-        return NULL;
+        return;
     
     //se for único
     if (p == lista->inicio && p == lista->fim)

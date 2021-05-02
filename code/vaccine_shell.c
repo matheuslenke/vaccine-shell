@@ -21,6 +21,12 @@ void libera_shell(vsh_t* shell){
     free(shell);
 }
 
+void imprime_prompt() {
+    printf("\rvsh 🐊 > ");
+    // Limpa o buffer para exibir corretamente no terminal
+    fflush(stdout);
+}
+
 void roda_comando_unico(char** comandos){
     // Verifica se o comando existe
     char* verificaComando = (char*)malloc(100 * sizeof(char));
@@ -182,8 +188,6 @@ void roda_comando_especial(char* linhaDeComando, int QtdPipes, TLista* lista_de_
             close(pipes[i][READ]);
             close(pipes[i][WRITE]);
         }
-
-        lista_filtra_pgids_ativos(lista_de_pgids);
         
         // Deixa o pai esperando os três filhos, para depois dar exit
         while ((wpid = wait(&status)) > 0) {
@@ -222,12 +226,6 @@ void roda_armageddon(vsh_t* vsh) {
 void roda_liberamoita(vsh_t* vsh) {
     while(waitpid(-1, NULL, WNOHANG) > 0);
     printf("Liberou todos os zombies.\n");
-}
-
-void imprime_prompt() {
-    printf("\rvsh 🐊 > ");
-    // Limpa o buffer para exibir corretamente no terminal
-    fflush(stdout);
 }
 
 void le_comando(vsh_t* vsh) {

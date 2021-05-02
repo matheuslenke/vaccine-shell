@@ -1,3 +1,0 @@
-/home/lenke/dev/UFES/vaccine-shell/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/lenke/dev/UFES/vaccine-shell/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/lenke/dev/UFES/vaccine-shell/cmake-build-debug/CMakeFiles/vaccine_shell.dir
